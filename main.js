@@ -1,87 +1,159 @@
+// Productos disponibles
+let productos = [
+    { id: 1, nombre: "Camiseta", precio: 3500, imagen: "images/remeraazul.png" },
+    { id: 2, nombre: "Pantalón", precio: 7000, imagen: "images/pantalonnegro.jpg" },
+    { id: 3, nombre: "Zapatillas", precio: 12000, imagen: "images/zapatillasnegras.jpg" }
+];
 
-// 1. Declaración de variables, constantes y arrays
-const historial = [];
-let seguir = true;
+// Carrito (se carga desde localStorage si existe)
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
-// Las variables para los números y el resultado se declaran dentro de las funciones para mejor práctica
+// Referencias DOM
+const productosDiv = document.getElementById("productos");
+const carritoItemsDiv = document.getElementById("carrito-items");
+const vaciarBtn = document.getElementById("vaciar");
+const formProducto = document.getElementById("form-producto");
+const tipoProdInput = document.getElementById("tipo-prod");
+const talleProdInput = document.getElementById("talle-prod");
+const carritoTotalDiv = document.getElementById("carrito-total");
 
-// 2. Funciones para operaciones y mostrar historial
-function sumar() {
-    const num1 = parseFloat(prompt("Ingrese el primer número:"));
-    const num2 = parseFloat(prompt("Ingrese el segundo número:"));
-    const resultado = num1 + num2;
-    alert(`El resultado de la suma es: ${resultado}`);
-    historial.push(`Suma: ${num1} + ${num2} = ${resultado}`);
+// Opciones de talles
+const tallesRopa = ["XS", "S", "M", "L", "XL", "XXL"];
+const tallesZapatillas = [35,36,37,38,39,40,41];
+
+// Cambiar opciones de talle según producto
+if (tipoProdInput && talleProdInput) {
+    tipoProdInput.addEventListener('change', () => {
+        talleProdInput.innerHTML = '<option value="">Selecciona un talle</option>';
+        if (tipoProdInput.value === "Camiseta" || tipoProdInput.value === "Pantalón") {
+            tallesRopa.forEach(t => {
+                talleProdInput.innerHTML += `<option value="${t}">${t}</option>`;
+            });
+        } else if (tipoProdInput.value === "Zapatillas") {
+            tallesZapatillas.forEach(t => {
+                talleProdInput.innerHTML += `<option value="${t}">${t}</option>`;
+            });
+        }
+    });
 }
 
-function restar() {
-    const num1 = parseFloat(prompt("Ingrese el primer número:"));
-    const num2 = parseFloat(prompt("Ingrese el segundo número:"));
-    const resultado = num1 - num2;
-    alert(`El resultado de la resta es: ${resultado}`);
-    historial.push(`Resta: ${num1} - ${num2} = ${resultado}`);
+// Mostrar productos
+function mostrarProductos() {
+    productosDiv.innerHTML = "<h2>Productos</h2>";
+    productos.forEach(prod => {
+        const prodDiv = document.createElement("div");
+        prodDiv.className = "producto";
+        prodDiv.innerHTML = `
+            <img src="${prod.imagen}" alt="${prod.nombre}" style="width:80px; height:auto; margin-right:10px; border-radius:8px;">
+            <span>${prod.nombre} - $${prod.precio}</span>
+            <button data-id="${prod.id}">Agregar</button>
+        `;
+        productosDiv.appendChild(prodDiv);
+    });
+    // Eventos agregar
+    document.querySelectorAll('.producto button').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            agregarAlCarrito(id);
+        });
+    });
 }
 
-function multiplicar() {
-    const num1 = parseFloat(prompt("Ingrese el primer número:"));
-    const num2 = parseFloat(prompt("Ingrese el segundo número:"));
-    const resultado = num1 * num2;
-    alert(`El resultado de la multiplicación es: ${resultado}`);
-    historial.push(`Multiplicación: ${num1} * ${num2} = ${resultado}`);
-}
-
-function dividir() {
-    const num1 = parseFloat(prompt("Ingrese el primer número:"));
-    const num2 = parseFloat(prompt("Ingrese el segundo número:"));
-    if (num2 !== 0) {
-        const resultado = num1 / num2;
-        alert(`El resultado de la división es: ${resultado}`);
-        historial.push(`División: ${num1} / ${num2} = ${resultado}`);
+// Agregar producto al carrito
+function agregarAlCarrito(id, talle = null) {
+    const prod = productos.find(p => p.id === id);
+    let item;
+    if (talle) {
+        item = carrito.find(p => p.id === id && p.talle === talle);
     } else {
-        alert("Error: División por cero no permitida.");
-        historial.push(`División: ${num1} / ${num2} = Error (división por cero)`);
+        item = carrito.find(p => p.id === id);
     }
-}
-
-function mostrarHistorial() {
-    if (historial.length === 0) {
-        alert("No hay operaciones en el historial.");
+    if (item) {
+        item.cantidad++;
     } else {
-        console.log("Historial de operaciones:");
-        historial.forEach(op => console.log(op));
-        alert("Historial mostrado en la consola.");
+        let prodACarro = { ...prod, cantidad: 1 };
+        if (talle) prodACarro.talle = talle;
+        carrito.push(prodACarro);
     }
+    guardarCarrito();
+    mostrarCarrito();
 }
 
-// 3. Menú principal y ciclo de la calculadora
-while (seguir) {
-    const opc = parseInt(prompt(
-      "Ingrese una opción:\n1- Suma\n2- Resta\n3- Multiplicación\n4- División\n5- Ver historial\n6- Salir"
-    ));
-    switch (opc) {
-        case 1:
-            sumar();
-            break;
-        case 2:
-            restar();
-            break;
-        case 3:
-            multiplicar();
-            break;
-        case 4:
-            dividir();
-            break;
-        case 5:
-            mostrarHistorial();
-            break;
-        case 6:
-            if (confirm("¿Seguro que quieres salir?")) {
-                seguir = false;
-                alert("¡Hasta luego!");
-            }
-            break;
-        default:
-            alert("Opción no válida.");
-            break;
+// Quitar producto del carrito
+function quitarDelCarrito(id, talle = null) {
+    if (talle) {
+        carrito = carrito.filter(p => !(p.id === id && p.talle === talle));
+    } else {
+        carrito = carrito.filter(p => p.id !== id);
     }
+    guardarCarrito();
+    mostrarCarrito();
 }
+
+// Mostrar carrito y total
+function mostrarCarrito() {
+    carritoItemsDiv.innerHTML = "";
+    let total = 0;
+    if (carrito.length === 0) {
+        carritoItemsDiv.innerHTML = "<p>El carrito está vacío.</p>";
+        carritoTotalDiv.innerHTML = "";
+        return;
+    }
+    carrito.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "carrito-item";
+        itemDiv.innerHTML = `
+            <img src="${item.imagen}" alt="${item.nombre}" style="width:50px; height:auto; margin-right:10px; border-radius:8px;">
+            <span>${item.nombre} ${item.talle ? "- Talle: " + item.talle : ""} x${item.cantidad} - $${item.precio * item.cantidad}</span>
+            <button data-id="${item.id}" data-talle="${item.talle || ''}">Quitar</button>
+        `;
+        carritoItemsDiv.appendChild(itemDiv);
+        total += item.precio * item.cantidad;
+    });
+    carritoTotalDiv.innerHTML = `<strong>Total: $${total}</strong>`;
+    // Eventos quitar
+    document.querySelectorAll('.carrito-item button').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const talle = e.target.getAttribute('data-talle') || null;
+            quitarDelCarrito(id, talle);
+        });
+    });
+}
+
+// Guardar carrito en localStorage
+function guardarCarrito() {
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
+// Agregar producto personalizado desde formulario
+formProducto.addEventListener('submit', e => {
+    e.preventDefault();
+    const nombre = tipoProdInput.value;
+    const talle = talleProdInput.value;
+    if (!nombre || !talle) return;
+    // Precio por defecto según producto
+    let precio = 0;
+    let imagen = "";
+    if (nombre === "Camiseta") { precio = 3500; imagen = "images/remeraazul.png"; }
+    if (nombre === "Pantalón") { precio = 7000; imagen = "images/pantalonnegro.jpg"; }
+    if (nombre === "Zapatillas") { precio = 12000; imagen = "images/zapatillasnegras.jpg"; }
+    const nuevoId = productos.length > 0 ? productos[productos.length - 1].id + 1 : 1;
+    const nuevoProd = { id: nuevoId, nombre, precio, imagen };
+    productos.push(nuevoProd);
+    mostrarProductos();
+    agregarAlCarrito(nuevoId, talle);
+    tipoProdInput.value = "";
+    talleProdInput.innerHTML = '<option value="">Selecciona un talle</option>';
+});
+
+// Vaciar carrito y eventos principales
+document.addEventListener('DOMContentLoaded', () => {
+    mostrarProductos();
+    mostrarCarrito();
+    vaciarBtn.addEventListener('click', () => {
+        carrito = [];
+        guardarCarrito();
+        mostrarCarrito();
+    });
+});

@@ -3,41 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: #f0f0f0;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            background: #fff;
-            padding: 2rem 3rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        h1 {
-            color: #2c3e50;
-        }
-        p {
-            color: #555;
-        }
-    </style>
+    <title>Carrito de Compras</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="main.js" defer></script>
 </head>
 <body>
     <div class="container">
-        <h1>Calculadora Interactiva</h1>
-        <p>
-            Usa el menú de la calculadora que aparecerá al cargar la página.<br>
-            Elige una opción, ingresa los números y mira los resultados.<br>
-            Puedes ver el historial en la consola (F12).
-        </p>
+        <h1>Tienda - Carrito de Compras</h1>
+        <form id="form-producto" class="form-producto">
+            <select id="tipo-prod" required>
+                <option value="">Selecciona un producto</option>
+                <option value="Camiseta">Camiseta</option>
+                <option value="Pantalón">Pantalón</option>
+                <option value="Zapatillas">Zapatillas</option>
+            </select>
+            <select id="talle-prod" required>
+                <option value="">Selecciona un talle</option>
+            </select>
+            <button type="submit">Agregar producto personalizado</button>
+        </form>
+        <div class="productos" id="productos"></div>
+        <div class="carrito" id="carrito">
+            <h2>Tu carrito</h2>
+            <div id="carrito-items"></div>
+            <div id="carrito-total"></div>
+            <button id="vaciar">Vaciar carrito</button>
+        </div>
     </div>
 </body>
 </html>
